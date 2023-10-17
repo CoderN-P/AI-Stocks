@@ -7,8 +7,11 @@ from joblib import dump, load
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from hyperparameter_tuning import xgb_param_grid, tune
 
 
+# NVDA: OrderedDict([('colsample_bytree', 0.7), ('gamma', 0.0), ('learning_rate', 0.1), ('max_depth', 5), ('min_child_weight', 2), ('n_estimators', 200), ('objective', 'reg:squarederror'), ('reg_alpha', 0.5), ('reg_lambda', 1.0), ('subsample', 0.8)])
+# AAPL: OrderedDict([('colsample_bytree', 0.8), ('gamma', 0.2), ('learning_rate', 0.1), ('max_depth', 7), ('min_child_weight', 3), ('n_estimators', 200), ('objective', 'reg:squarederror'), ('reg_alpha', 0.5), ('reg_lambda', 0.5), ('subsample', 1.0)])
 def trainRegression(stock):
     s = f'./{stock}.csv'
     DF = pd.read_csv(s)
@@ -25,17 +28,15 @@ def trainRegression(stock):
     X = DF.to_numpy()[:, [7, 8, 9, 10, 11, 12, 13]]
     y = DF.to_numpy()[:, 4]
 
-    model = xgb.XGBRegressor()
+    best_params = tune(xgb_param_grid, X, y)
+    print(best_params)
 
-    """
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    x_test_data = scaler.transform(X_test)
-    """
+    new_model = xgb.XGBRegressor(**best_params)
+
     # Fit the model to the data (find the coefficients)
-    model.fit(X, y)
-    dump(model, f'{stock}.joblib')
-    return model
+    new_model.fit(X, y)
+    dump(new_model, f'{stock}.joblib')
+    return new_model
 
 
 if __name__ == "__main__":
