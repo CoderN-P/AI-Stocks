@@ -1,8 +1,12 @@
-from joblib import dump, load
+from joblib import load
+from keras.models import load_model
 
 
-def predict(stock_symbol, lag_data):
-    model = load(f'{stock_symbol}.joblib')
+def predict(file, lag_data):
+    if file.split('.')[-1] == 'joblib':
+        model = load(file)
+    else:
+        model = load_model(file)
     return model.predict(lag_data)
 
 
