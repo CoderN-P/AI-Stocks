@@ -8,7 +8,8 @@ from keras.layers import InputLayer
 
 # Read the data
 from utils.prepare_data import prepare_data
-from keras.models import Sequential, save_model
+from keras.models import Sequential
+from utils.store_model import store_model
 
 
 
@@ -47,7 +48,7 @@ def main(stock):
                epochs=50,
                callbacks=[early_stop])
 
-    save_model(model1, f'./models/{stock}.h5')
+    store_model(model1, stock, "h5")
 
     print('Completed')
 

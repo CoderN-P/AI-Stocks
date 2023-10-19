@@ -9,7 +9,13 @@ from utils.store_model import store_model
 NVDA = OrderedDict([('colsample_bytree', 0.7), ('gamma', 0.0), ('learning_rate', 0.1), ('max_depth', 5), ('min_child_weight', 2), ('n_estimators', 200), ('objective', 'reg:squarederror'), ('reg_alpha', 0.5), ('reg_lambda', 1.0), ('subsample', 0.8)])
 AAPL = OrderedDict([('colsample_bytree', 0.8), ('gamma', 0.2), ('learning_rate', 0.1), ('max_depth', 7), ('min_child_weight', 3), ('n_estimators', 200), ('objective', 'reg:squarederror'), ('reg_alpha', 0.5), ('reg_lambda', 0.5), ('subsample', 1.0)])
 WMT = OrderedDict([('colsample_bytree', 0.7), ('gamma', 0.1), ('learning_rate', 0.1), ('max_depth', 4), ('min_child_weight', 2), ('n_estimators', 200), ('objective', 'reg:squarederror'), ('reg_alpha', 0.0), ('reg_lambda', 0.1), ('subsample', 0.8)])
-
+NFLX = OrderedDict([('colsample_bytree', 0.7), ('gamma', 0.0), ('learning_rate', 0.1), ('max_depth', 7), ('min_child_weight', 2), ('n_estimators', 300), ('objective', 'reg:squarederror'), ('reg_alpha', 0.5), ('reg_lambda', 1.0), ('subsample', 0.8)])
+best_hyperparams = {
+    'NVDA': NVDA,
+    'AAPL': AAPL,
+    'WMT': WMT,
+    'NFLX': NFLX
+}
 # [177.09044]
 
 
@@ -19,10 +25,8 @@ def trainRegression(stock):
     RESULT = 4
     X, y = prepare_data(stock, LAG, TRAIN, RESULT)
 
-    if stock == 'NVDA':
-        best_params = NVDA
-    elif stock == 'AAPL':
-        best_params = AAPL
+    if stock in best_hyperparams:
+        best_params = best_hyperparams[stock]
     else:
         best_params = tune(xgb_param_grid, X, y)
         print(best_params)
@@ -30,7 +34,7 @@ def trainRegression(stock):
 
     # Fit the model to the data (find the coefficients)
     new_model.fit(X, y)
-    store_model(new_model, stock)
+    store_model(new_model, stock, "joblib")
     return new_model
 
 
