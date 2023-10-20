@@ -5,50 +5,41 @@ from keras.models import Sequential
 from keras.layers import LSTM, Dense
 from keras.callbacks import EarlyStopping
 from keras.layers import InputLayer
-
+import numpy as np
 # Read the data
-from utils.prepare_data import prepare_data
+from sklearn.preprocessing import MinMaxScaler
+
+from utils.get_parent_path import get_parent_path
+from utils.prepare_data import prepare_lstm
 from keras.models import Sequential
 from utils.store_model import store_model
-
+from joblib import dump
 
 
 def main(stock):
-    TRAIN = [7, 8, 9, 10, 11, 12, 13]
+    TRAIN = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13]
     LAG = ['Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
     RESULT = 4
 
-    X, y = prepare_data(stock, LAG, TRAIN, RESULT)
+    X, y = prepare_lstm(stock, LAG, TRAIN, RESULT, 10)
+    y = y[10:]
+    y = y.reshape(-1, 1)
+    y = np.array(y, dtype='float')
 
-    # split data into train and validation
-    X_val = X[-30:]
-    y_val = y[-30:]
-    X = X[:-30]
-    y = y[:-30]
+    scaler = MinMaxScaler()
+    y = scaler.fit_transform(y)
 
-    model1 = Sequential()
-    print(X_val.shape)
-    model1.add(InputLayer(input_shape=(X.shape[-1], 1)))
-    model1.add(LSTM(100, return_sequences = True))
-    model1.add(LSTM(100, return_sequences = True))
-    model1.add(LSTM(50))
-    model1.add(Dense(8, activation = 'relu'))
-    model1.add(Dense(1, activation = 'linear'))
+    scaler_path = str(get_parent_path()) + f'/scalers/{stock}.save'
+    dump(scaler, scaler_path)
+    model = Sequential()
+    model.add(LSTM(50, input_shape=X.shape[1:], return_sequences=False))
+    model.add(Dense(1))
+    model.compile(loss='mean_squared_error', optimizer='adam')
 
-    model1.summary()
+    # Train the model
+    model.fit(X, y, epochs=100, batch_size=64, verbose=1)
 
-    early_stop = EarlyStopping(monitor='val_loss', patience=2)
-
-    model1.compile(loss=MeanSquaredError(),
-                   optimizer=Adam(learning_rate=0.0001),
-                   metrics=RootMeanSquaredError())
-
-    model1.fit(X, y,
-               validation_data=(X_val, y_val),
-               epochs=50,
-               callbacks=[early_stop])
-
-    store_model(model1, stock, "h5")
+    store_model(model, stock, "h5")
 
     print('Completed')
 
